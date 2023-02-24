@@ -1,0 +1,10 @@
+{
+    "name": "curl",
+    "version": "7.87.0",
+    "port-version": 0,
+    "features": {
+        "ssl": {
+            "description": ""
+        }
+    }
+}
