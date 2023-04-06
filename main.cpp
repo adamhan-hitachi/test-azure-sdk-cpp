@@ -1,4 +1,5 @@
 #include <azure/core.hpp>
+#include <azure/storage/common/storage_exception.hpp>
 #include <azure/core/http/curl_transport.hpp>
 #include <azure/storage/blobs.hpp>
 #include <boost/algorithm/string.hpp>
@@ -28,6 +29,15 @@ std::cout << "libcurl " << data->version << " " << data->version_num << std::end
   // Initialize a new instance of BlobServiceClient
   BlobServiceClient service_client("http://localhost:10000/devstoreaccount1",
                                    azure_credentials, options);
+  
+  // Re-create container 
+  try {
+    service_client.DeleteBlobContainer("mycontainer");
+  } catch (Azure::Storage::StorageException& e) { 
+    std::cout << "Acceptable exception by DeleteBlobContainer() " << e.Message << std::endl;
+  }
+  
+  service_client.CreateBlobContainer("mycontainer");
 
   std::vector<std::string> objectsName;
   for (int i = 1; i < 50; ++i) {
@@ -36,7 +46,7 @@ std::cout << "libcurl " << data->version << " " << data->version_num << std::end
 
   std::string objectContent(100, 'c');
 
-  auto container_client = service_client.GetBlobContainerClient("gfs");
+  auto container_client = service_client.GetBlobContainerClient("mycontainer");
   for (auto& item : objectsName) {
     auto blob_client = container_client.GetBlockBlobClient(item);
     blob_client.UploadFrom(
@@ -68,8 +78,9 @@ std::cout << "libcurl " << data->version << " " << data->version_num << std::end
   //   }
 
   // auto delete_result = delete_batch.DeleteBlob(objectsName[0]);
-  auto delete_result_2 = delete_batch_2.DeleteBlob("gfs", objectsName[1]);
+  auto delete_result_2 = delete_batch_2.DeleteBlob("mycontainer", objectsName[1]);
 
+// Error!!! stand exception buffered  
   try {
     // Azure::Response<Models::SubmitBlobBatchResult> outcome =
     //     container_client.SubmitBatch(delete_batch);
@@ -94,15 +105,13 @@ std::cout << "libcurl " << data->version << " " << data->version_num << std::end
   //     }
   //   }
 
+  /// Error!!! Buffered exception thrown
   try {
     delete_result_2.GetResponse();
   } catch (Azure::Storage::StorageException& e) {
     // subrequest fail
     std::cerr << "delete error " << std::endl;
-
-  } catch (const std::exception& e) {
-    std::cerr << "unknown exception " << e.what() << std::endl;
-  }
+  } 
 
   //   try {
   //     delete_result.GetResponse();
